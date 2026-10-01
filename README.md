@@ -10,8 +10,8 @@ Training : anchor (design A, colour 1) / positive (A, colour 2) / negative (B, S
 Inference: query embedding → cosine similarity → gallery → Top-K designs   |   pair → cosine ≥ τ → same design
 ```
 
-## Approach note (490 chars)
-ResNet34 (ImageNet) > GeM > 256-d FC+BN > L2; cosine for ranking, val-tuned threshold for verification. Design = one source photo; dHash dedup prevents split leakage. Train: PK batches (32 designs x 4 views), crop/flip/rot90, GPU colourways (hue rotation, channel swap, gradient-map palettes, gray, invert), each view's palette shared across designs so same-colour/other-motif negatives fill every batch; batch-hard triplet m=0.2, AdamW, cosine LR. Test uses an unseen k-means palette swap.
+## Approach note (489 chars)
+We use a pretrained ImageNet ResNet34 as a shared embedding encoder. Images are resized and color-augmented using brightness, saturation, hue and grayscale transformations. A 256-D normalized embedding is learned with Triplet Loss using same-design different-colour positives and different-design negatives. PK batches deliberately share colourways across designs to create hard same-colour negatives. Retrieval uses cosine similarity, with validation-selected thresholds for verification.
 
 ## Results
 Test set: 189 designs that never appear in training (25 Roboflow + 164 DeepLure). Each query is in a palette that differs from every gallery palette of its design, and the k-means recolouring operator is never used in training. The threshold τ is picked on validation.
@@ -28,7 +28,7 @@ Test set: 189 designs that never appear in training (25 Roboflow + 164 DeepLure)
 
 ## Run it
 1. Kaggle: add the dataset `div456/indian-saree-patterns`, and add the DeepLure corpus as a **private** dataset. Turn the GPU on and choose Run All. Data paths are detected automatically.
-2. Locally: `pip install torch torchvision scikit-learn pandas matplotlib pillow`, then set `DATA_DIR` in step 02 to your data folder.
+2. Locally: `pip install -r requirements.txt`, then set `DATA_DIR` in step 02 to your data folder.
 
 ## Data handling and disclosures
 * No colourway labels exist, so a **design is one source photo**. Roboflow augmentation copies are merged, and dHash near-duplicates (Hamming ≤ 6) are merged too. 87 duplicate groups that straddled the original splits were moved to train, so val and test are unseen.
