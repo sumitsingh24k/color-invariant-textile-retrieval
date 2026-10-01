@@ -1,0 +1,4 @@
+*.pt
+outputs/
+data/
+.ipynb_checkpoints/
